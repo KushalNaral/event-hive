@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 function successResponse($data = null, $message = null, $statusCode = 200): JsonResponse
 {
     return response()->json([
-        'success' => $statusCode,
+        'status' => $statusCode,
         'message' => $message,
         'data'    => $data
     ], $statusCode);
@@ -30,7 +30,7 @@ function successResponse($data = null, $message = null, $statusCode = 200): Json
 function errorResponse($message, $statusCode = 400, $errors = null): JsonResponse
 {
     return response()->json([
-        'success' => false,
+        'status' => $statusCode,
         'message' => $message,
         'errors'  => $errors
     ], $statusCode);
