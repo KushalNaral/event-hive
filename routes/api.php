@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\V1\EventCategoryController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -16,4 +17,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('v1')->group(function () {
+
+    //for event-categories
+    Route::prefix('event-category')->group(function () {
+        Route::get('', [EventCategoryController::class ,'getAllCategories' ]);
+    });
+
 });
