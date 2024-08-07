@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
 
+            $table->boolean('first_login')->default(1); // for first login to add cats relations
+
             $table->string('phone_number')->nullable();
             $table->string('otp')->nullable();
             $table->date('otp_verified_at')->nullable();
