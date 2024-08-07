@@ -55,3 +55,10 @@ Follow these steps to get the project up and running on your local machine:
   * Created response helpers in App\Helpers\ReponseHelpers.php
   * Created a database seeder for EventCategories
   * Created an API for EventCategories
+
+
+* **Date:** Wednesday, August 7, 2024
+  * Created Register API
+  * Created Login API
+  * Created OTP Verify API
+  * Created OTP Resend API
