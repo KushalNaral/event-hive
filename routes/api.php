@@ -26,6 +26,7 @@ Route::prefix('v1')->group(function () {
     //for event-categories
     Route::prefix('event-category')->group(function () {
         Route::get('', [EventCategoryController::class ,'getAllCategories' ])->middleware('auth:api');
+        Route::post('/assign', [EventCategoryController::class ,'assignCategoryToUsers' ])->middleware('auth:api');
     });
 
     //auth routes
@@ -35,7 +36,6 @@ Route::prefix('v1')->group(function () {
     Route::prefix('otp')->group(function (){
         Route::post('/verify', [OtpController::class,'verify']);
         Route::post('/resend', [OtpController::class,'resend']);
-
     });
 
 });

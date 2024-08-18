@@ -62,3 +62,7 @@ Follow these steps to get the project up and running on your local machine:
   * Created Login API
   * Created OTP Verify API
   * Created OTP Resend API
+
+* **Date:** Sunday, August 18, 2024
+  * Created User Category Assignement API
+  * Created new table for said relationship

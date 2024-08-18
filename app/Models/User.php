@@ -47,4 +47,10 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    //event-cat relation
+    public function categories()
+    {
+        return $this->belongsToMany(EventCategory::class, 'user_event_categories');
+    }
 }

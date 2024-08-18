@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class AssignCategoryToUsersRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,27 +22,23 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required',
-            'phone_number' => 'required|min:10|max:10',
+            'category_id' => 'required|array|exists:event_categories,id',
+            'user_id' => 'required|exists:users,id', //here will this be provided from the back or front confused
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'name' => 'User Name',
-            'email' => 'Email Address',
-            /* 'password' => 'Password', */
-            'phone_number' => 'Phone Number',
+            'category_id' => 'Event Category',
+            'user_id' => 'User',
         ];
     }
 
     public function messages(): array
     {
         return [
-            '*.required' => 'The :attribute is required',
+            '*.exists' => 'The selected :attribute does not exist.',
         ];
     }
 }

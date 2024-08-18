@@ -14,4 +14,10 @@ class EventCategory extends Model
         'slug'
     ];
 
+    //user relation
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_event_categories');
+    }
+
 }

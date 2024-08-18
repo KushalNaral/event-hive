@@ -62,8 +62,8 @@ class UserRegistrationOtp implements Otp
         for ($i = 0; $i < $length; $i++) {
             $randomPassword .= $characters[rand(0, $charactersLength - 1)];
         }
-        /* return bcrypt($randomPassword); */
-        return bcrypt('password');
+        return bcrypt($randomPassword);
+        /* return bcrypt('password'); */
     }
 
 }
