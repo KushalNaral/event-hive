@@ -66,3 +66,5 @@ Follow these steps to get the project up and running on your local machine:
 * **Date:** Sunday, August 18, 2024
   * Created User Category Assignement API
   * Created new table for said relationship
+  * Integrated Google SMTP for mail
+  * Added test for mail

@@ -44,7 +44,12 @@ class AuthController extends Controller
             DB::commit();
             return successResponse($otp, "User Registered Successfully. An OTP Has Been Sent To Your Email.", 200);
 
-        } catch(Exception $e) {
+        }
+        catch(\TransportException $te) {
+            DB::rollback();
+            return errorResponse($te->getMessage(), $te->getStatusCode(), $te->errors() );
+        }
+        catch(Exception $e) {
             DB::rollback();
             return errorResponse($e->getMessage(), $e->getStatusCode(), $e->errors() );
         }
