@@ -26,6 +26,9 @@ Route::prefix('v1')->group(function () {
     //for event-categories
     Route::prefix('event-category')->group(function () {
         Route::get('', [EventCategoryController::class ,'getAllCategories' ])->middleware('auth:api');
+        Route::post('', [EventCategoryController::class ,'store' ])->middleware('auth:api');
+        Route::put('/{id}', [EventCategoryController::class ,'update' ])->middleware('auth:api');
+        Route::delete('/{id}', [EventCategoryController::class ,'delete' ])->middleware('auth:api');
         Route::post('/assign', [EventCategoryController::class ,'assignCategoryToUsers' ])->middleware('auth:api');
     });
 

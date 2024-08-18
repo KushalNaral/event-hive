@@ -68,3 +68,7 @@ Follow these steps to get the project up and running on your local machine:
   * Created new table for said relationship
   * Integrated Google SMTP for mail
   * Added test for mail
+  * Added new testing env, make a clone of the .env and add testing db name to it and phpunit.xml
+  * Created CRUD for Event Categories
+  * Created tests for Event Categories
+
