@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EventController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
 
+    //auth routes
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+
+
     //for event-categories
     Route::prefix('event-category')->group(function () {
         Route::get('', [EventCategoryController::class ,'getAllCategories' ])->middleware('auth:api');
@@ -32,9 +38,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/assign', [EventCategoryController::class ,'assignCategoryToUsers' ])->middleware('auth:api');
     });
 
-    //auth routes
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    //for events
+    Route::prefix('events')->middleware('auth:api')->group(function () {
+        Route::get('', [EventController::class, 'getAllEvents']);
+        Route::post('', [EventController::class, 'createEvents']);
+        Route::put('/{id}', [EventController::class, 'updateEventById']);
+        Route::delete('/{id}', [EventController::class, 'deleteEventById']);
+    });
+
 
     Route::prefix('otp')->group(function (){
         Route::post('/verify', [OtpController::class,'verify']);

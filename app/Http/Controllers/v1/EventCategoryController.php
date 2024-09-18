@@ -66,7 +66,6 @@ class EventCategoryController extends Controller
             $eventCategory = EventCategory::where('id', $id)->first();
 
             if(!$eventCategory || empty($eventCategory)){
-                dd('her');
                 return errorResponse( 'Event Category Not Found.', 404, [] );
             }
 
