@@ -19,7 +19,6 @@ class UserCategoryTest extends TestCase
 
     use RefreshDatabase;
 
-
     protected $api;
     protected $authToken;
 

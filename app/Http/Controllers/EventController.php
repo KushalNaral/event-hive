@@ -89,6 +89,27 @@ class EventController extends Controller
         }
     }
 
+    public function getEventById($id){
+        try {
+            DB::beginTransaction();
+            $event = Event::where('id', $id)->first();
+            if(!$event || $event == null){
+                return errorResponse('The selected event does not exist', 404, []);
+            }
+            DB::commit();
+            return successResponse($event, "Event Retrieved Successfully", 200);
+        } catch (QueryException $q) {
+            DB::rollBack();
+            return errorResponse('Database error occurred while deleting event.', 500, [$q->getMessage()]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return errorResponse('An unexpected error occurred.', 500, [$e->getMessage()]);
+        }
+
+
+    }
+
+    //attribute section
     private function generateAndSetEventAttributes(Event $event)
     {
         $attributeSchema = [
@@ -133,6 +154,7 @@ class EventController extends Controller
 
         return $event;
     }
+
     private function classifyEventSize($expectedParticipants)
     {
         return match (true) {
@@ -190,7 +212,7 @@ class EventController extends Controller
                 'limit' => 1
             ],
             'headers' => [
-                'User-Agent' => 'EventHive/1.0' // Replace with your app name
+                'User-Agent' => 'EventHive/1.0'
             ]
         ]);
 

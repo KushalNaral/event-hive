@@ -41,6 +41,7 @@ Route::prefix('v1')->group(function () {
     //for events
     Route::prefix('events')->middleware('auth:api')->group(function () {
         Route::get('', [EventController::class, 'getAllEvents']);
+        Route::get('/{id}', [EventController::class, 'getEventById']);
         Route::post('', [EventController::class, 'createEvents']);
         Route::put('/{id}', [EventController::class, 'updateEventById']);
         Route::delete('/{id}', [EventController::class, 'deleteEventById']);
