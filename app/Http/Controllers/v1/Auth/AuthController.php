@@ -10,6 +10,7 @@ use App\Models\User;
 
 use App\Notifications\OtpNotification;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -75,14 +76,27 @@ class AuthController extends Controller
             return errorResponse('Invalid Credentials, Please Verify', 401, []);
         }
 
-        if($user->first_login == 1){
-            $user->update(['first_login' => 0]);
-        }
-
         $data['token'] = $user->createToken($user->email)->accessToken;
         $data['user'] = $user;
 
         return successResponse($data, "User Logged In Successfully", 200);
     }
 
+    public function getProfile() {
+        $user = auth()->user();
+
+        $first_time_login = false;
+
+        // Check if this is the user's first login
+        if ($user->first_login == 1) {
+            $first_time_login = true;
+
+            $user->first_login = 0;
+            $user->save();
+        }
+
+        $user->first_login = $first_time_login;
+
+        return successResponse($user, "User Profile Fetched Successfully.", 200);
+    }
 }

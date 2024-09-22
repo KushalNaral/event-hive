@@ -27,6 +27,7 @@ Route::prefix('v1')->group(function () {
     //auth routes
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::get('profile', [AuthController::class, 'getProfile'])->middleware('auth:api');
 
 
     //for event-categories
