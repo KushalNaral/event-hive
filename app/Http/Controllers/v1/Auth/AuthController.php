@@ -76,15 +76,6 @@ class AuthController extends Controller
             return errorResponse('Invalid Credentials, Please Verify', 401, []);
         }
 
-        $data['token'] = $user->createToken($user->email)->accessToken;
-        $data['user'] = $user;
-
-        return successResponse($data, "User Logged In Successfully", 200);
-    }
-
-    public function getProfile() {
-        $user = auth()->user();
-
         $first_time_login = false;
 
         // Check if this is the user's first login
@@ -96,7 +87,14 @@ class AuthController extends Controller
         }
 
         $user->first_login = $first_time_login;
+        $data['token'] = $user->createToken($user->email)->accessToken;
+        $data['user'] = $user;
 
+        return successResponse($data, "User Logged In Successfully", 200);
+    }
+
+    public function getProfile() {
+        $user = auth()->user();
         return successResponse($user, "User Profile Fetched Successfully.", 200);
     }
 }
