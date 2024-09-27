@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Models\UserInteractions;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
-class RegisterRequest extends FormRequest
+class UserInteractionRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,6 +16,11 @@ class RegisterRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    public function interactions(): array
+    {
+        return UserInteractions::interactions();
     }
 
     /**
@@ -24,20 +31,16 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required',
-            'phone_number' => 'required|min:10|max:10',
+            'event_id' => 'required|exists:events,id',
+            'interaction_type' => ['required', Rule::in(self::interactions())],
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'name' => 'User Name',
-            'email' => 'Email Address',
-            /* 'password' => 'Password', */
-            'phone_number' => 'Phone Number',
+            'event_id' => 'Event',
+            'interaction_type' => 'Interaction Type',
         ];
     }
 
@@ -48,11 +51,9 @@ class RegisterRequest extends FormRequest
         ];
     }
 
-    //the method here overrides the default validation error format
     protected function failedValidation(Validator $validator)
     {
         $response = errorResponse("Please check the form again.", 422, $validator->errors());
         throw new ValidationException($validator, $response);
     }
-
 }

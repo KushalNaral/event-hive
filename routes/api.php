@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\UserInteractionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -48,7 +49,16 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{id}', [EventController::class, 'deleteEventById']);
     });
 
+    // For user interactions
+    Route::prefix('event-interactions')->middleware('auth:api')->group(function () {
+        Route::get('/', [UserInteractionsController::class, 'getDefaultInteractions']);
+        Route::post('/', [UserInteractionsController::class, 'setInteractions']);
+        Route::get('/all', [UserInteractionsController::class, 'getAllInteractions']);
+        Route::get('/user/{user_id}/events', [UserInteractionsController::class, 'getAllInteractionsForUser']);
+        Route::get('/events/{event_id}', [UserInteractionsController::class, 'getInteractionForEventAndUser']);
+    });
 
+    //otp
     Route::prefix('otp')->group(function (){
         Route::post('/verify', [OtpController::class,'verify']);
         Route::post('/resend', [OtpController::class,'resend']);

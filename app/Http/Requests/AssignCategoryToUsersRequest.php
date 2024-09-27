@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class AssignCategoryToUsersRequest extends FormRequest
 {
@@ -40,5 +42,12 @@ class AssignCategoryToUsersRequest extends FormRequest
         return [
             '*.exists' => 'The selected :attribute does not exist.',
         ];
+    }
+
+    //the method here overrides the default validation error format
+    protected function failedValidation(Validator $validator)
+    {
+        $response = errorResponse("Please check the form again.", 422, $validator->errors());
+        throw new ValidationException($validator, $response);
     }
 }
