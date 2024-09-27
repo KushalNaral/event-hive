@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventRatingController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\UserInteractionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +58,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/all', [UserInteractionsController::class, 'getAllInteractions']);
         Route::get('/user/{user_id}/events', [UserInteractionsController::class, 'getAllInteractionsForUser']);
         Route::get('/events/{event_id}', [UserInteractionsController::class, 'getInteractionForEventAndUser']);
+    });
+
+    // For event ratings
+    Route::prefix('event-ratings')->middleware('auth:api')->group(function () {
+        Route::get('/', [RatingController::class, 'getAllRatings']);
+        Route::post('/', [RatingController::class, 'storeRatings']);
     });
 
     //otp
