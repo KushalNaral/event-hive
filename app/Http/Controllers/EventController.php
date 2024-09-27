@@ -6,8 +6,10 @@ use App\Http\Requests\CreateEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
 use App\Models\EventCategory;
+use App\Services\RecommendationEngine;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -310,4 +312,21 @@ class EventController extends Controller
             return 'semi-formal';
         }
     }
+
+    public function getRecommendations(Request $request)
+    {
+        $user = Auth::user();
+        $recommendationEngine = new RecommendationEngine();
+        $recommendedEventIds = $recommendationEngine->getRecommendations($user, 100);
+
+
+        $recommendedEvents = Event::whereIn('id', array_keys($recommendedEventIds))
+            ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")")
+            ->get();
+            //->pluck('id');
+
+        return successResponse($recommendedEvents, "Recommended events", 200);
+
+    }
+
 }

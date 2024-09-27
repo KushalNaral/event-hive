@@ -48,6 +48,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    //updating preferences here
+    public function updatePreferences(array $preferences)
+    {
+        $this->preferences = array_merge($this->preferences ?? [], $preferences);
+        $this->save();
+    }
+
     //event-cat relation
     public function categories()
     {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRatingController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInteractionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +33,6 @@ Route::prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::get('profile', [AuthController::class, 'getProfile'])->middleware('auth:api');
 
-
     //for event-categories
     Route::prefix('event-category')->group(function () {
         Route::get('', [EventCategoryController::class ,'getAllCategories' ])->middleware('auth:api');
@@ -44,6 +44,10 @@ Route::prefix('v1')->group(function () {
 
     //for events
     Route::prefix('events')->middleware('auth:api')->group(function () {
+
+        //for recommendations
+        Route::get('/recommendations', [EventController::class, 'getRecommendations']);
+
         Route::get('', [EventController::class, 'getAllEvents']);
         Route::get('/{id}', [EventController::class, 'getEventById']);
         Route::post('', [EventController::class, 'createEvents']);
@@ -65,6 +69,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [RatingController::class, 'getAllRatings']);
         Route::post('/', [RatingController::class, 'storeRatings']);
     });
+
+    // user and user acts
+    Route::prefix('user')->middleware('auth:api')->group(function () {
+        Route::post('preferences', [UserController::class, 'updatePreferences'])->middleware('auth:api');
+    });
+
 
     //otp
     Route::prefix('otp')->group(function (){
