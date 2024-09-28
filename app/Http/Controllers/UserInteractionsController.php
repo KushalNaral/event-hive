@@ -24,6 +24,12 @@ class UserInteractionsController extends Controller
             $params = $request->validated();
 
             DB::beginTransaction();
+
+            UserInteractions::where('user_id', auth()->user()->id)
+                ->where('event_id', $params['event_id'])
+                ->where('interaction_type', $params['interaction_type'])
+                ->delete();
+
             $interaction = UserInteractions::create($params);
             DB::commit();
 

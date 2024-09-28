@@ -27,6 +27,9 @@ class RatingController extends Controller
             $params = $request->validated();
 
             DB::beginTransaction();
+
+            $this->resetRatings($params);
+
             $rating = EventRating::create($params);
             DB::commit();
 
@@ -42,4 +45,21 @@ class RatingController extends Controller
 
     //initially implemented only get and store other methods will be updated later
     // the recommendation engine is prio right now
+
+    private function resetRatings($params){
+        try {
+            if(!$params && count($params) <= 0){
+                return;
+            }
+
+            $existing_ratings = EventRating::where('event_id', $params['event_id'])->where('created_by', auth()->user()->id)->get();
+
+            foreach ($existing_ratings as $key => $value) {
+                $value->delete();
+            }
+
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 }
