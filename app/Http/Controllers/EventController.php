@@ -101,7 +101,31 @@ class EventController extends Controller
                 return errorResponse('The selected event does not exist', 404, []);
             }
             DB::commit();
-            return successResponse($event, "Event Retrieved Successfully", 200);
+            $mapped_event =  [
+                'id' => $event->id,
+                'title' => $event->title,
+                'start_date' => $event->start_date,
+                'end_date' => $event->end_date,
+                'location' => $event->location,
+                "expected_participants" => $event->expected_participants,
+                "total_involved_participants" => $event->total_involved_participants,
+
+                'bookmarked' => $event->getInteractions('bookmark') ? true : false,
+
+                'total_views' => $event->getTotalInteractions('view'),
+                'total_bookmarked' => $event->getTotalInteractions('bookmark'),
+                'total_attending' => $event->getTotalInteractions('view'),
+                'total_registered' => $event->getTotalInteractions('view'),
+
+                'logged_user_rating' => $event->getUserRating(),
+
+                "category_id" => $event->category_id,
+                "category" => $event->category,
+                "created_by" => [ "id" => $event->createdBy?->id , "name" => $event->createdBy?->name ],
+                "created_at" => $event->created_at,
+            ];
+
+            return successResponse($mapped_event, 'Event(s) fetched successfully');
         } catch (QueryException $q) {
             DB::rollBack();
             return errorResponse('Database error occurred while deleting event.', 500, [$q->getMessage()]);

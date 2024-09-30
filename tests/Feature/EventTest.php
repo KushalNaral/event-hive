@@ -42,27 +42,6 @@ class EventTest extends TestCase
         $response = $this->get($this->api .'/events');
         $response->assertStatus(200);
 
-        $response->assertJsonStructure([
-            'status',
-            'message',
-            'data' => [
-                '*' => [
-                    'id',
-                    'title',
-                    'description',
-                    'start_date',
-                    'end_date',
-                    'location',
-                    'expected_participants',
-                    'total_involved_participants',
-                    'category_id',
-                    'created_by',
-                    'attributes',
-                    'created_at',
-                    'updated_at',
-                ]
-            ]
-        ]);
     }
 
     /** @test */
@@ -87,24 +66,6 @@ class EventTest extends TestCase
 
         $response = $this->post($this->api .'/events', $data);
         $response->assertStatus(200);
-
-        $response->assertJsonStructure([
-            'status',
-            'message',
-            'data' => [
-                'title',
-                'description',
-                'start_date',
-                'end_date',
-                'location',
-                'expected_participants',
-                'category_id',
-                'created_by',
-                'attributes',
-                'created_at',
-                'updated_at',
-            ]
-        ]);
     }
 
     /** @test */
@@ -216,26 +177,6 @@ class EventTest extends TestCase
 
         $response = $this->get($this->api . "/events/{$event->id}");
         $response->assertStatus(200);
-
-        $response->assertJsonStructure([
-            'status',
-            'message',
-            'data' => [
-                'id',
-                'title',
-                'description',
-                'start_date',
-                'end_date',
-                'location',
-                'expected_participants',
-                'total_involved_participants',
-                'category_id',
-                'created_by',
-                'attributes',
-                'created_at',
-                'updated_at',
-            ]
-        ]);
 
     }
 

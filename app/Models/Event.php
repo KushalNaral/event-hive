@@ -44,5 +44,33 @@ class Event extends Model
             $event->created_by = auth()->user()->id;
         });
     }
+
+
+    public function getInteractions($type)
+    {
+        $event_id = $this->id;
+        $user_id = auth()->user()->id;
+
+        $interaction = UserInteractions::where('user_id', $user_id)->where('event_id', $event_id)->where('interaction_type', $type)->latest()->first();
+
+        return $interaction ?? 0;
+    }
+
+    public function getTotalInteractions($type)
+    {
+        $event_id = $this->id;
+
+        $interaction = UserInteractions::where('event_id', $event_id)->where('interaction_type', $type)->get()->count();
+        return $interaction ?? 0;
+    }
+
+    public function getUserRating()
+    {
+        $event_id = $this->id;
+        $user_id = auth()->user()->id;
+
+        $rating = Rating::where('event_id', $event_id)->where('created_by', $user_id)->latest()->first()?->rating ;
+        return $rating ?? 'not-rated';
+    }
 }
 
