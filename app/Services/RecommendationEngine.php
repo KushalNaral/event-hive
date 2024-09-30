@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\User;
 use App\Models\UserInteractions as UserInteraction;
 use App\Models\EventRating;
+use App\Models\UserCategory as UserEventCategory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -19,6 +20,7 @@ class RecommendationEngine
     private const CAPACITY_WEIGHT = 0.05;
     private const RATING_WEIGHT = 0.15;
     private const SIMILARITY_THRESHOLD = 0.5;
+    private const USER_CORRELATION_WEIGHT = 0.2;
 
     private $logFile;
 
@@ -32,24 +34,64 @@ class RecommendationEngine
         $this->logCalculation("Starting recommendation calculation for User ID: {$user->id}");
         $this->logCalculation("User Name: {$user->name}");
 
-        //return Cache::remember("user_recommendations_{$user->id}", self::CACHE_TTL, function () use ($user, $limit) {
-            $interactionBasedScores = $this->getInteractionBasedScores($user);
-            $preferenceBasedScores = $this->getPreferenceBasedScores($user);
-            $popularityScores = $this->getPopularityScores();
-            $capacityScores = $this->getCapacityScores();
-            $ratingScores = $this->getRatingScores();
+        $interactionBasedScores = $this->getInteractionBasedScores($user);
+        $preferenceBasedScores = $this->getPreferenceBasedScores($user);
+        $popularityScores = $this->getPopularityScores();
+        $capacityScores = $this->getCapacityScores();
+        $ratingScores = $this->getRatingScores();
+        $userCorrelationScores = $this->getUserCorrelationScores($user);
 
-            $combinedScores = $this->combineScores($interactionBasedScores, $preferenceBasedScores, $popularityScores, $capacityScores, $ratingScores);
+        $combinedScores = $this->combineScores(
+            $interactionBasedScores,
+            $preferenceBasedScores,
+            $popularityScores,
+            $capacityScores,
+            $ratingScores,
+            $userCorrelationScores
+        );
 
-            arsort($combinedScores);
-            $topRecommendations = array_slice($combinedScores, 0, $limit, true);
+        arsort($combinedScores);
+        $topRecommendations = array_slice($combinedScores, 0, $limit, true);
 
-            $recommendations = $this->getSimilarEvents($topRecommendations, $combinedScores);
+        $recommendations = $this->getSimilarEvents($topRecommendations, $combinedScores);
 
-            $this->logCalculation("Finished recommendation calculation for User ID: {$user->id}");
+        $this->logCalculation("Finished recommendation calculation for User ID: {$user->id}");
 
-            return $recommendations;
-        //});
+
+        return $recommendations;
+    }
+
+    private function getUserCorrelationScores(User $user): array
+    {
+        $this->logCalculation("Calculating user correlation scores for User ID: {$user->id}");
+
+        $userCategories = UserEventCategory::where('user_id', $user->id)->pluck('event_category_id')->toArray();
+
+        $correlatedUsers = UserEventCategory::whereIn('event_category_id', $userCategories)
+            ->where('user_id', '!=', $user->id)
+            ->select('user_id', DB::raw('COUNT(*) as category_match'))
+            ->groupBy('user_id')
+            ->orderByDesc('category_match')
+            ->limit(10)
+            ->get();
+
+        $scores = [];
+        foreach ($correlatedUsers as $correlatedUser) {
+            $correlationStrength = $correlatedUser->category_match / count($userCategories);
+
+            $userInteractions = UserInteraction::where('user_id', $correlatedUser->user_id)
+                ->select('event_id', 'interaction_type')
+                ->get();
+
+            foreach ($userInteractions as $interaction) {
+                $interactionWeight = $this->getInteractionWeight($interaction->interaction_type);
+                $scores[$interaction->event_id] = ($scores[$interaction->event_id] ?? 0) + ($interactionWeight * $correlationStrength);
+            }
+        }
+
+        $this->logCalculation("User correlation scores calculated. Number of correlated events: " . count($scores));
+
+        return $scores;
     }
 
     private function getSimilarEvents(array $topRecommendations, array $allScores): array
@@ -351,8 +393,10 @@ class RecommendationEngine
         return $scores;
     }
 
-    private function combineScores(array $interactionScores, array $preferenceScores, array $popularityScores, array $capacityScores, array $ratingScores): array
+    private function combineScores(array $interactionScores, array $preferenceScores, array $popularityScores, array $capacityScores, array $ratingScores, array $userCorrelationScores): array
     {
+        $this->logCalculation("Combining scores for final recommendations");
+
         $combinedScores = [];
 
         $allEventIds = array_unique(array_merge(
@@ -360,7 +404,8 @@ class RecommendationEngine
             array_keys($preferenceScores),
             array_keys($popularityScores),
             array_keys($capacityScores),
-            array_keys($ratingScores)
+            array_keys($ratingScores),
+            array_keys($userCorrelationScores)
         ));
 
         foreach ($allEventIds as $eventId) {
@@ -369,13 +414,17 @@ class RecommendationEngine
             $popularityScore = $popularityScores[$eventId] ?? 0;
             $capacityScore = $capacityScores[$eventId] ?? 0;
             $ratingScore = $ratingScores[$eventId] ?? 0;
+            $userCorrelationScore = $userCorrelationScores[$eventId] ?? 0;
 
             $combinedScores[$eventId] =
-            ($interactionScore * 0.45) +
-                ($preferenceScore * 0.25) +
+            ($interactionScore * 0.35) +
+                ($preferenceScore * 0.20) +
                 ($popularityScore * self::POPULARITY_WEIGHT) +
                 ($capacityScore * self::CAPACITY_WEIGHT) +
-                ($ratingScore * self::RATING_WEIGHT);
+                ($ratingScore * self::RATING_WEIGHT) +
+                ($userCorrelationScore * self::USER_CORRELATION_WEIGHT);
+
+            $this->logCalculation("Event ID: $eventId, Combined Score: {$combinedScores[$eventId]}");
         }
 
         return $combinedScores;
@@ -386,4 +435,5 @@ class RecommendationEngine
         $formattedMessage = "[" . date('Y-m-d H:i:s') . "] " . $message . "\n";
         file_put_contents($this->logFile, $formattedMessage, FILE_APPEND);
     }
+
 }
