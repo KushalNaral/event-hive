@@ -73,6 +73,7 @@ Route::prefix('v1')->group(function () {
     // user and user acts
     Route::prefix('user')->middleware('auth:api')->group(function () {
         Route::post('preferences', [UserController::class, 'updatePreferences'])->middleware('auth:api');
+        Route::get('events', [EventController::class, 'getUserEvents'])->middleware('auth:api');
     });
 
 

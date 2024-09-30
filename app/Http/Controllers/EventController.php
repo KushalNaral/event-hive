@@ -323,10 +323,23 @@ class EventController extends Controller
         $recommendedEvents = Event::whereIn('id', array_keys($recommendedEventIds))
             ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")")
             ->get();
-            //->pluck('id');
+        //->pluck('id');
 
         return successResponse($recommendedEvents, "Recommended events", 200);
 
     }
 
+    public function getUserEvents()
+    {
+        try {
+            $events = Event::where('created_by', auth()->user()->id)->get();
+
+            if(!$events && count($events) <= 0){
+                return successResponse([], "You have not created any events yet", 200);
+            }
+            return successResponse($events, "User events fetched successfully", 200);
+        } catch (\Throwable $th) {
+            return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
+        }
+    }
 }
