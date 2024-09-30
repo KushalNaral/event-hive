@@ -24,6 +24,14 @@ class Event extends Model
         "updated_at",
     ];
 
+    public function category(){
+        return $this->hasOne(EventCategory::class, 'id');
+    }
+
+    public function createdBy(){
+        return $this->hasOne(User::class, 'id');
+    }
+
     public function rating(){
         return $this->hasOne(Rating::class);
     }

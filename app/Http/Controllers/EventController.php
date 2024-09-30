@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Http\Resources\EventCollection;
+use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\EventCategory;
 use App\Services\RecommendationEngine;
@@ -20,7 +22,7 @@ class EventController extends Controller
     public function getAllEvents(Request $request){
         try {
             $events = Event::all();
-            return successResponse($events, 'Event(s) fetched successfully');
+            return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully');
         } catch (\Throwable $th) {
             return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
         }
