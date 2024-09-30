@@ -26,6 +26,7 @@ class CreateEventRequest extends FormRequest
         return [
             'title' => 'required',
             'description' => 'nullable',
+            'image' => 'nullable|file|max:2048',
             'start_date' => 'date', //to set start time you need to send the format as such yyyy/mm/dd hh:mm, on the basis of this attributes are set
             'end_date' => 'date',
             'location' => 'required',
@@ -38,6 +39,7 @@ class CreateEventRequest extends FormRequest
     {
         return [
             'title' => 'Title',
+            'image' => 'Event Image',
             'description' => 'Description',
             'start_date' => 'Starting Date',
             'end_date' => 'Ending Date',

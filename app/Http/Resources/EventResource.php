@@ -24,9 +24,13 @@ class EventResource extends JsonResource
             'end_date' => $this->end_date,
             'location' => $this->location,
             "expected_participants" => $this->expected_participants,
+
+            "image" => $this->image?->url,
+
             "total_involved_participants" => $this->total_involved_participants,
 
             'bookmarked' => $this->getInteractions('bookmark') ? true : false,
+            'registered' => $this->getInteractions('register') ? true : false,
 
             'total_views' => $this->getTotalInteractions('view'),
             'total_bookmarked' => $this->getTotalInteractions('bookmark'),

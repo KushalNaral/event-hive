@@ -16,9 +16,12 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Database\QueryException;
 use GuzzleHttp\Client;
+use App\Traits\ImageUploader;
 
 class EventController extends Controller
 {
+    use ImageUploader;
+
     public function getAllEvents(Request $request){
         try {
             $events = Event::all();
@@ -33,10 +36,15 @@ class EventController extends Controller
         try {
             DB::beginTransaction();
             $event = Event::create($params);
-            DB::commit();
             if($event){
                 $this->generateAndSetEventAttributes($event);
             }
+
+            if($request->hasFile('image')){
+                $uploadedFile = $this->handleFileUpload($request->image, 'uploads', 'App\Models\Event', $event->id);
+            }
+
+            DB::commit();
             return successResponse($event, "Event Created Successfully", 200);
         } catch (QueryException $q) {
             DB::rollBack();
@@ -59,6 +67,11 @@ class EventController extends Controller
             if(!$update_status || $update_status == null){
                 return errorResponse('An error occured, please try again later', 400, []);
             }
+
+            //if($request->hasFile('image')){
+            //   $this->updateFile($event->image, $request('image'), 'uploads');
+            //}
+
             DB::commit();
             $this->generateAndSetEventAttributes($event);
             return successResponse($event, "Event Updated Successfully", 200);
@@ -104,13 +117,17 @@ class EventController extends Controller
             $mapped_event =  [
                 'id' => $event->id,
                 'title' => $event->title,
+                'description' => $event->description,
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,
                 'location' => $event->location,
                 "expected_participants" => $event->expected_participants,
                 "total_involved_participants" => $event->total_involved_participants,
 
+                "image" => $event->image?->url,
+
                 'bookmarked' => $event->getInteractions('bookmark') ? true : false,
+                'registered' => $event->getInteractions('register') ? true : false,
 
                 'total_views' => $event->getTotalInteractions('view'),
                 'total_bookmarked' => $event->getTotalInteractions('bookmark'),

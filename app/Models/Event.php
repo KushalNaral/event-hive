@@ -36,6 +36,10 @@ class Event extends Model
         return $this->hasOne(Rating::class);
     }
 
+    public function image(){
+        return $this->hasOne(Files::class, 'model_id');
+    }
+
     public static function boot(): void
     {
         parent::boot();
