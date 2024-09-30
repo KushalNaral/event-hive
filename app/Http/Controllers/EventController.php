@@ -327,7 +327,7 @@ class EventController extends Controller
             ->get();
         //->pluck('id');
 
-        return successResponse($recommendedEvents, "Recommended events", 200);
+        return successResponse( EventResource::collection(new EventCollection($recommendedEvents)), "Recommended events", 200);
 
     }
 
@@ -339,7 +339,7 @@ class EventController extends Controller
             if(!$events && count($events) <= 0){
                 return successResponse([], "You have not created any events yet", 200);
             }
-            return successResponse($events, "User events fetched successfully", 200);
+            return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully');
         } catch (\Throwable $th) {
             return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
         }
