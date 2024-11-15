@@ -37,8 +37,18 @@ class EventController extends Controller
     public function getAllEvents(Request $request)
     {
         try {
-            $query = Event::query()
-                ->where('created_by', '!=', auth()->user()->id);
+            $query = Event::query();
+
+            // Base query excluding user's own events
+            $query->where('created_by', '!=', auth()->user()->id);
+
+            // Check if user is admin
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            // Apply published filter for non-admin users
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
 
             // Apply filters
             $filter = new EventFilter($request);
@@ -68,7 +78,17 @@ class EventController extends Controller
             $request = request()->merge(['timeframe' => $timeframe]);
             $filter = new EventFilter($request);
 
-            $events = $filter->apply(Event::query())->paginate(15);
+
+            $query = Event::query();
+            $query->where('created_by', '!=', auth()->user()->id);
+
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
+
+            $events = $filter->apply($query)->paginate(15);
 
             return successResponse(
                 EventResource::collection($events),
@@ -208,10 +228,20 @@ class EventController extends Controller
     public function getEventById($id){
         try {
             DB::beginTransaction();
-            $event = Event::where('id', $id)->first();
+
+            $query = Event::query();
+
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
+
+            $event = $query->where('id', $id)->first();
             if(!$event || $event == null){
                 return errorResponse('The selected event does not exist', 404, []);
             }
+
             DB::commit();
             $mapped_event =  [
                 'id' => $event->id,
@@ -235,6 +265,7 @@ class EventController extends Controller
                 'total_bookmarked' => $event->getTotalInteractions('bookmark'),
                 'total_attending' => $event->getTotalInteractions('view'),
                 'total_registered' => $event->getTotalInteractions('view'),
+                'published' => $event->is_published ? true : false,
 
                 'logged_user_rating' => $event->getUserRating(),
 
@@ -464,8 +495,7 @@ class EventController extends Controller
         $recommendationEngine = new RecommendationEngine();
         $recommendedEventIds = $recommendationEngine->getRecommendations($user, 100);
 
-
-        $recommendedEvents = Event::whereIn('id', array_keys($recommendedEventIds))
+        $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id)->where('is_published', 1)->whereIn('id', array_keys($recommendedEventIds))
             ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")")
             ->get();
         //->pluck('id');
@@ -474,14 +504,26 @@ class EventController extends Controller
 
     }
 
-    public function getUserEvents()
+    public function getUserEvents(Request $request)
     {
         try {
-            $events = Event::where('created_by', auth()->user()->id)->get();
+            $query = Event::query();
+            $events = $query->where('created_by', auth()->user()->id);
 
-            if(!$events && count($events) <= 0){
-                return successResponse([], "You have not created any events yet", 200);
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            // Apply published filter for non-admin users
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
             }
+
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
             return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully');
         } catch (\Throwable $th) {
             return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
@@ -498,12 +540,17 @@ class EventController extends Controller
                         ->where('events.start_date', '>=', now());
                 });
 
+            $query->where('created_by', '!=', auth()->user()->id);
 
-            // Apply filters
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
+
             $filter = new EventFilter($request);
             $filteredEvents = $filter->apply($query);
 
-            // Handle pagination
             $perPage = $request->get('per_page', 15);
             $events = $filteredEvents->paginate($perPage);
 
@@ -529,6 +576,14 @@ class EventController extends Controller
                         ->where('user_id', auth()->id())
                         ->where('events.end_date', '<', now());
                 });
+
+            $query->where('created_by', '!=', auth()->user()->id);
+
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
 
             // Apply filters
             $filter = new EventFilter($request);
@@ -557,7 +612,14 @@ class EventController extends Controller
             $eventIds = EventBookmarks::query()->where('user_id', auth()->id())->get()->pluck('event_id')->toArray();
             $query = Event::query()->whereIn('id', $eventIds);
 
-            // Apply filters
+            $query->where('created_by', '!=', auth()->user()->id);
+
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
+
             $filter = new EventFilter($request);
             $filteredEvents = $filter->apply($query);
 
@@ -583,6 +645,14 @@ class EventController extends Controller
         try {
             $eventIds = EventLikes::query()->where('user_id', auth()->id())->get()->pluck('event_id')->toArray();
             $query = Event::query()->whereIn('id', $eventIds);
+
+            $query->where('created_by', '!=', auth()->user()->id);
+
+            $isAdmin = auth()->user()->hasRole('admin');
+
+            if (!$isAdmin) {
+                $query->where('is_published', 1);
+            }
 
             // Apply filters
             $filter = new EventFilter($request);

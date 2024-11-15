@@ -2,6 +2,7 @@
 
 namespace App\Otp;
 
+use App\Models\Role;
 use SadiqSalau\LaravelOtp\Contracts\OtpInterface as Otp;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -46,6 +47,9 @@ class UserRegistrationOtp implements Otp
         $token = $user->createToken($this->email)->accessToken;
         $user->token = $token;
 
+        $nonAdminRole = Role::where('name', 'non-admin')->first();
+
+        $user->roles()->attach($nonAdminRole->id);
         event(new Registered($user));
 
         Auth::login($user);

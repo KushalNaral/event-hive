@@ -22,6 +22,7 @@ use SadiqSalau\LaravelOtp\Facades\Otp;
 use Illuminate\Auth\Events\Login;
 
 use Exception;
+use function GuzzleHttp\json_encode;
 
 class AuthController extends Controller
 {
@@ -94,7 +95,31 @@ class AuthController extends Controller
     }
 
     public function getProfile() {
+
         $user = auth()->user();
-        return successResponse($user, "User Profile Fetched Successfully.", 200);
+        $allPermissions = [];
+
+        if ($user->roles()->exists()) {
+            $role = $user->roles()->first();
+            $rolePermissions = $role->permissions->pluck('name');
+
+            $roles = [
+                'id' => $role->id,
+                'name' => $role->name,
+                'permissions' => $rolePermissions,
+            ];
+
+            $allPermissions = $rolePermissions->all();
+
+            $user->role = $roles['name'];
+
+        } else {
+            $user->role = 'guest';
+        }
+
+        $user->all_permissions = $allPermissions;
+
+        return successResponse($user, 'User Profile Fetched Successfully.', 200);
     }
+
 }

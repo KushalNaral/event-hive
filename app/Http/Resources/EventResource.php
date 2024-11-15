@@ -35,6 +35,8 @@ class EventResource extends JsonResource
             'not_interested' => $this->getInteractions('dis-like') ? true : false,
             'attending' => $this->getInteractions('attend') ? true : false,
 
+            'published' => $this->is_published ? true : false,
+
             'total_views' => $this->getTotalInteractions('view'),
             'total_bookmarked' => $this->getTotalInteractions('bookmark'),
             'total_attending' => $this->getTotalInteractions('view'),

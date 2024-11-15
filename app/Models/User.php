@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
@@ -59,5 +60,28 @@ class User extends Authenticatable
     public function categories()
     {
         return $this->belongsToMany(EventCategory::class, 'user_event_categories');
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    // Check if the user has a specific role
+    public function hasRole($roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    // Assign a role to the user
+    public function assignRole($role)
+    {
+        $this->roles()->attach($role);
+    }
+
+    // Remove a role from the user
+    public function removeRole($role)
+    {
+        $this->roles()->detach($role);
     }
 }
