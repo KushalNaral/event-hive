@@ -8,7 +8,9 @@ use App\Http\Requests\UpdateEventRequest;
 use App\Http\Resources\EventCollection;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\EventBookmarks;
 use App\Models\EventCategory;
+use App\Models\EventLikes;
 use App\Services\RecommendationEngine;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -60,7 +62,7 @@ class EventController extends Controller
         }
     }
 
-      public function getEventsByTimeframe($timeframe)
+    public function getEventsByTimeframe($timeframe)
     {
         try {
             $request = request()->merge(['timeframe' => $timeframe]);
@@ -483,6 +485,123 @@ class EventController extends Controller
             return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully');
         } catch (\Throwable $th) {
             return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
+        }
+    }
+
+    public function getAttendingEvents(Request $request)
+    {
+        try {
+            $query = Event::query()
+                ->whereHas('interactions', function($query) {
+                    $query->where('interaction_type', 'attend')
+                        ->where('user_id', auth()->id())
+                        ->where('events.start_date', '>=', now());
+                });
+
+
+            // Apply filters
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
+            return successResponse(
+                EventResource::collection($events),
+                'Attending events fetched successfully'
+            );
+        } catch (\Throwable $th) {
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
+        }
+    }
+
+    public function getAttendedEvents(Request $request)
+    {
+        try {
+            $query = Event::query()
+                ->whereHas('interactions', function($query) {
+                    $query->where('interaction_type', 'attend')
+                        ->where('user_id', auth()->id())
+                        ->where('events.end_date', '<', now());
+                });
+
+            // Apply filters
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
+            return successResponse(
+                EventResource::collection($events),
+                'Attended events fetched successfully'
+            );
+        } catch (\Throwable $th) {
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
+        }
+    }
+
+    public function getBookmarkedEvents(Request $request)
+    {
+        try {
+            $eventIds = EventBookmarks::query()->where('user_id', auth()->id())->get()->pluck('event_id')->toArray();
+            $query = Event::query()->whereIn('id', $eventIds);
+
+            // Apply filters
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
+            return successResponse(
+                EventResource::collection($events),
+                'Bookmarked events fetched successfully'
+            );
+        } catch (\Throwable $th) {
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
+        }
+    }
+
+    public function getLikedEvents(Request $request)
+    {
+        try {
+            $eventIds = EventLikes::query()->where('user_id', auth()->id())->get()->pluck('event_id')->toArray();
+            $query = Event::query()->whereIn('id', $eventIds);
+
+            // Apply filters
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
+            return successResponse(
+                EventResource::collection($events),
+                'Liked events fetched successfully'
+            );
+        } catch (\Throwable $th) {
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
         }
     }
 }

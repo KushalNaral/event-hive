@@ -92,7 +92,7 @@ class EventTest extends TestCase
             'category_id' => $category->id,
         ];
 
-        $response = $this->put($this->api . "/events/{$event->id}", $update_data);
+        $response = $this->post($this->api . "/events/{$event->id}", $update_data);
 
         $response->assertStatus(200);
 
@@ -131,7 +131,7 @@ class EventTest extends TestCase
             'category_id' => $newCategory->id,
         ];
 
-        $response = $this->put($this->api . "/events/{$event->id}", $update_data);
+        $response = $this->post($this->api . "/events/{$event->id}", $update_data);
 
         $response->assertStatus(200);
 

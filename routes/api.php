@@ -47,12 +47,16 @@ Route::prefix('v1')->group(function () {
 
         //for recommendations
         Route::get('/recommendations', [EventController::class, 'getRecommendations']);
+        Route::get('/attending', [EventController::class, 'getAttendingEvents']);
+        Route::get('/attended', [EventController::class, 'getAttendedEvents']);
+        Route::get('/bookmarked', [EventController::class, 'getBookmarkedEvents']);
+        Route::get('/liked', [EventController::class, 'getLikedEvents']);
         //Route::get('/trending', [EventController::class, 'getTrendingEvents']);
 
         Route::get('', [EventController::class, 'getAllEvents']);
         Route::get('/{id}', [EventController::class, 'getEventById']);
         Route::post('', [EventController::class, 'createEvents']);
-        Route::put('/{id}', [EventController::class, 'updateEventById']);
+        Route::post('/{id}', [EventController::class, 'updateEventById']);
         Route::delete('/{id}', [EventController::class, 'deleteEventById']);
 
         //below routes for getting events based on date not used
