@@ -19,7 +19,7 @@ class UserInteractions extends Model
     // helps in settign some user behaviour stats
     public static function interactions(){
 
-        $default_interactions = ['view', 'bookmark', 'register', 'attend', 'rate', 'feedback'];
+        $default_interactions = ['view', 'bookmark', 'un-bookmark', 'register', 'attend', 'feedback', 'like', 'un-like', 'dis-like'];
         return $default_interactions;
     }
 

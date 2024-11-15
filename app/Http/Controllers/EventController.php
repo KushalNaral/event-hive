@@ -129,6 +129,9 @@ class EventController extends Controller
                 'bookmarked' => $event->getInteractions('bookmark') ? true : false,
                 'registered' => $event->getInteractions('register') ? true : false,
 
+                'liked' => $event->getInteractions('like') ? true : false,
+                'not_interested' => $event->getInteractions('dis-like') ? true : false,
+                'attending' => $event->getInteractions('attend') ? true : false,
                 'total_views' => $event->getTotalInteractions('view'),
                 'total_bookmarked' => $event->getTotalInteractions('bookmark'),
                 'total_attending' => $event->getTotalInteractions('view'),

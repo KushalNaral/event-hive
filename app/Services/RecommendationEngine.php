@@ -156,6 +156,7 @@ class RecommendationEngine
             'bookmark' => 0.3,
             'register' => 0.5,
             'attend' => 0.7,
+            'like' => 0.7,
             default => 0,
         };
     }

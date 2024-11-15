@@ -31,6 +31,9 @@ class EventResource extends JsonResource
 
             'bookmarked' => $this->getInteractions('bookmark') ? true : false,
             'registered' => $this->getInteractions('register') ? true : false,
+            'liked' => $this->getInteractions('like') ? true : false,
+            'not_interested' => $this->getInteractions('dis-like') ? true : false,
+            'attending' => $this->getInteractions('attend') ? true : false,
 
             'total_views' => $this->getTotalInteractions('view'),
             'total_bookmarked' => $this->getTotalInteractions('bookmark'),
