@@ -172,7 +172,8 @@ class EventTest extends TestCase
 
         $category = EventCategory::factory()->create();
         $event = Event::factory()->create([
-            'category_id' => $category->id
+            'category_id' => $category->id,
+            'is_published' => 1,
         ]);
 
         $response = $this->get($this->api . "/events/{$event->id}");

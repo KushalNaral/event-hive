@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AdminEventController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRatingController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserInteractionsController;
 use Illuminate\Http\Request;
@@ -22,11 +24,23 @@ use App\Http\Controllers\v1\Auth\OtpController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::prefix('v1')->group(function () {
+
+    Route::prefix('admin')->middleware(['auth:api', 'admin'])->group(function () {
+
+        Route::prefix('roles')->group(function(){
+            Route::get('', [RoleController::class, 'getAllRoles']);
+            Route::get('permissions', [RoleController::class, 'getAllPermissions']);
+            Route::post('{roleId}/assign-permission', [RoleController::class, 'assignPermissionToRole']);
+        });
+
+        Route::post('events/{id}/publish', [AdminEventController::class, 'publish']);
+        //Route::post('events/{id}/verify', [AdminEventController::class, 'verify']); if needed in the future, like calling people to verify or payment signature
+
+        Route::post('users/{userId}/assign-role', [RoleController::class, 'assignRoleToUser']);
+        Route::post('users/{userId}/remove-role', [RoleController::class, 'removeRoleFromUser']);
+    });
+
 
     //auth routes
     Route::post('register', [AuthController::class, 'register']);
@@ -94,5 +108,6 @@ Route::prefix('v1')->group(function () {
     });
 
 });
+
 
 
