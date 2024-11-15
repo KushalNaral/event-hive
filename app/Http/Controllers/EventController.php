@@ -158,7 +158,7 @@ class EventController extends Controller
         $params = $request->validated();
         try {
             DB::beginTransaction();
-            $event = Event::where('id', $id)->first();
+            $event = Event::where('id', $id)->with('image')->first();
             if(!$event || $event == null){
                 return errorResponse('The selected event does not exist', 404, []);
             }
@@ -167,9 +167,9 @@ class EventController extends Controller
                 return errorResponse('An error occured, please try again later', 400, []);
             }
 
-            //if($request->hasFile('image')){
-            //   $this->updateFile($event->image, $request('image'), 'uploads');
-            //}
+            if($request->hasFile('image')){
+               $this->updateFile($event->image, $request->image, 'uploads');
+            }
 
             DB::commit();
             $this->generateAndSetEventAttributes($event);
