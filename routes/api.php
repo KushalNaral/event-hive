@@ -47,12 +47,18 @@ Route::prefix('v1')->group(function () {
 
         //for recommendations
         Route::get('/recommendations', [EventController::class, 'getRecommendations']);
+        //Route::get('/trending', [EventController::class, 'getTrendingEvents']);
 
         Route::get('', [EventController::class, 'getAllEvents']);
         Route::get('/{id}', [EventController::class, 'getEventById']);
         Route::post('', [EventController::class, 'createEvents']);
         Route::put('/{id}', [EventController::class, 'updateEventById']);
         Route::delete('/{id}', [EventController::class, 'deleteEventById']);
+
+        //below routes for getting events based on date not used
+        /* Route::get('/timeframe/today', [EventController::class, 'getEventsByTimeframe'])->defaults('timeframe', 'today'); */
+        /* Route::get('/timeframe/weekend', [EventController::class, 'getEventsByTimeframe'])->defaults('timeframe', 'weekend'); */
+        /* Route::get('/timeframe/upcoming', [EventController::class, 'getEventsByTimeframe'])->defaults('timeframe', 'upcoming'); */
     });
 
     // For user interactions

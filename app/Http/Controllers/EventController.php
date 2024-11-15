@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filters\EventFilter;
 use App\Http\Requests\CreateEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Http\Resources\EventCollection;
@@ -22,14 +23,110 @@ class EventController extends Controller
 {
     use ImageUploader;
 
-    public function getAllEvents(Request $request){
+    /* public function getAllEvents(Request $request){ */
+    /*     try { */
+    /*         $events = Event::all(); */
+    /*         return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully'); */
+    /*     } catch (\Throwable $th) { */
+    /*         return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() ); */
+    /*     } */
+    /* } */
+
+    public function getAllEvents(Request $request)
+    {
         try {
-            $events = Event::all();
-            return successResponse( EventResource::collection(new EventCollection($events)), 'Event(s) fetched successfully');
+            $query = Event::query()
+                ->where('created_by', '!=', auth()->user()->id);
+
+            // Apply filters
+            $filter = new EventFilter($request);
+            $filteredEvents = $filter->apply($query);
+
+            // Handle pagination
+            $perPage = $request->get('per_page', 15);
+            $events = $filteredEvents->paginate($perPage);
+
+            return successResponse(
+                EventResource::collection($events),
+                'Events fetched successfully'
+            );
+
         } catch (\Throwable $th) {
-            return errorResponse($th->getMessage(), $th->getStatusCode(), $th->errors() );
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
         }
     }
+
+      public function getEventsByTimeframe($timeframe)
+    {
+        try {
+            $request = request()->merge(['timeframe' => $timeframe]);
+            $filter = new EventFilter($request);
+
+            $events = $filter->apply(Event::query())->paginate(15);
+
+            return successResponse(
+                EventResource::collection($events),
+                "Events for {$timeframe} fetched successfully"
+            );
+        } catch (\Throwable $th) {
+            return errorResponse(
+                $th->getMessage(),
+                $th->getCode() ?: 500,
+                $th?->errors() ?? []
+            );
+        }
+    }
+
+    /* public function getTrendingEvents(Request $request) */
+    /* { */
+    /*     try { */
+    /*         $query = Event::query() */
+    /*             ->where('start_date', '>=', Carbon::now()) */
+    /*             ->where('created_by', '!=', auth()->id()) */
+    /*             ->withCount(['interactions as view_count' => function ($query) { */
+    /*                 $query->where('interaction_type', 'view'); */
+    /*             }]) */
+    /*             ->withCount(['interactions as bookmark_count' => function ($query) { */
+    /*                 $query->where('interaction_type', 'bookmark'); */
+    /*             }]) */
+    /*             ->withCount(['interactions as attend_count' => function ($query) { */
+    /*                 $query->where('interaction_type', 'attend'); */
+    /*             }]); */
+    /*  */
+    /*  */
+    /*         // Calculate trending score based on various metrics */
+    /*         $query->selectRaw(' */
+    /*             events.*, */
+    /*             ( */
+    /*                 COALESCE(view_count, 0) * 1 + */
+    /*                 COALESCE(bookmark_count, 0) * 2 + */
+    /*                 COALESCE(attend_count, 0) * 3 */
+    /*             ) as trending_score */
+    /*         '); */
+    /*  */
+    /*         $filter = new EventFilter($request); */
+    /*         $filteredEvents = $filter->apply($query); */
+    /*  */
+    /*         $filteredEvents->orderBy('trending_score', 'desc'); */
+    /*  */
+    /*         $events = $filteredEvents->paginate($request->get('per_page', 15)); */
+    /*  */
+    /*         return successResponse( */
+    /*             EventResource::collection($events), */
+    /*             'Trending events fetched successfully' */
+    /*         ); */
+    /*     } catch (\Throwable $th) { */
+    /*         return errorResponse( */
+    /*             $th->getMessage(), */
+    /*             $th->getCode() ?: 500, */
+    /*             $th ?? [] */
+    /*         ); */
+    /*     } */
+    /* } */
 
     public function createEvents(CreateEventRequest $request){
         $params = $request->validated();
