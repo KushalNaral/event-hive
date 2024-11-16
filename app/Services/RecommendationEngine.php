@@ -23,9 +23,12 @@ class RecommendationEngine
     private const USER_CORRELATION_WEIGHT = 0.2;
 
     private $logFile;
+    private $logger;
+    private $currentLogId;
 
-    public function __construct()
+    public function __construct(RecommendationLogger $logger)
     {
+        $this->logger = $logger;
         $this->logFile = storage_path('logs/recommendation_engine.log');
     }
 
@@ -33,6 +36,8 @@ class RecommendationEngine
     {
         $this->logCalculation("Starting recommendation calculation for User ID: {$user->id}");
         $this->logCalculation("User Name: {$user->name}");
+
+        $this->currentLogId = $this->logger->logRecommendationStart($user->id);
 
         $interactionBasedScores = $this->getInteractionBasedScores($user);
         $preferenceBasedScores = $this->getPreferenceBasedScores($user);
@@ -55,7 +60,11 @@ class RecommendationEngine
 
         $recommendations = $this->getSimilarEvents($topRecommendations, $combinedScores);
 
+        //dd($topRecommendations, $recommendations , auth()->user()->id);
+
         $this->logCalculation("Finished recommendation calculation for User ID: {$user->id}");
+
+        $this->logger->logRecommendationComplete($this->currentLogId, $recommendations);
 
 
         return $recommendations;
@@ -187,33 +196,74 @@ class RecommendationEngine
 
             $this->logCalculation("Calculation started for event id: " . $event->id);
 
-            $score = $this->calculatePreferenceMatch($eventAttributes, $userPreferences);
+            $score = $this->calculatePreferenceMatch($eventAttributes, $userPreferences, $event->id);
             $scores[$event->id] = $score;
         }
 
         return $scores;
     }
 
-    private function calculatePreferenceMatch(array $eventAttributes, array $userPreferences): float
+    private function calculatePreferenceMatch(array $eventAttributes, array $userPreferences, $eventId): float
     {
+        $matches = [];
         $totalScore = 0;
         $totalWeight = 0;
 
         foreach ($userPreferences as $key => $preference) {
             $weight = $this->getPreferenceWeight($key);
             $totalWeight += $weight;
-
             $score = $this->comparePreference($key, $preference, $eventAttributes);
             $totalScore += $score * $weight;
-
-            $this->logCalculation("Preference: $key, Weight: $weight, Score: $score");
+            $matches[$key] = $score;
         }
 
-        $finalScore = $totalWeight > 0 ? $totalScore / $totalWeight : 0.5;
-        $this->logCalculation("Final Preference Score: $finalScore");
+        // Prepare logging data with null checks for each field
+        $loggingData = [
+            'category' => $matches['preferred_categories'] ?? 0,
+            'theme' => $matches['preferred_themes'] ?? 0,
+            'season' => $matches['preferred_seasons'] ?? 0,
+            'day' => $matches['preferred_days'] ?? 0,
+            'size' => $matches['preferred_event_sizes'] ?? 0,
+            'time' => $matches['preferred_times_of_day'] ?? 0,
+            'duration' => $matches['preferred_duration_days'] ?? 0,
+            'location' => $matches['preferred_location_types'] ?? 0,
+            'formality' => $matches['preferred_formality_levels'] ?? 0,
+            'event_attributes' => $eventAttributes, // Adding original attributes for debugging
+        ];
 
-        return $finalScore;
+        // Log preference matches with the generated or actual event ID
+        try {
+            $this->logger->logPreferenceMatch($this->currentLogId, $eventId, $loggingData);
+        } catch (\Exception $e) {
+            // Log the error but don't interrupt the calculation
+            $this->logger->error("Failed to log preference match: " . $e->getMessage(), [
+                'event_id' => $eventId,
+                'log_id' => $this->currentLogId
+            ]);
+        }
+
+        return $totalWeight > 0 ? $totalScore / $totalWeight : 0.5;
     }
+    /* private function calculatePreferenceMatch(array $eventAttributes, array $userPreferences): float */
+    /* { */
+    /*     $totalScore = 0; */
+    /*     $totalWeight = 0; */
+    /*  */
+    /*     foreach ($userPreferences as $key => $preference) { */
+    /*         $weight = $this->getPreferenceWeight($key); */
+    /*         $totalWeight += $weight; */
+    /*  */
+    /*         $score = $this->comparePreference($key, $preference, $eventAttributes); */
+    /*         $totalScore += $score * $weight; */
+    /*  */
+    /*         $this->logCalculation("Preference: $key, Weight: $weight, Score: $score"); */
+    /*     } */
+    /*  */
+    /*     $finalScore = $totalWeight > 0 ? $totalScore / $totalWeight : 0.5; */
+    /*     $this->logCalculation("Final Preference Score: $finalScore"); */
+    /*  */
+    /*     return $finalScore; */
+    /* } */
 
     private function comparePreference(string $key, $userPreference, array $eventAttributes): float
     {
@@ -394,12 +444,26 @@ class RecommendationEngine
         return $scores;
     }
 
-    private function combineScores(array $interactionScores, array $preferenceScores, array $popularityScores, array $capacityScores, array $ratingScores, array $userCorrelationScores): array
-    {
-        $this->logCalculation("Combining scores for final recommendations");
+    private function combineScores(
+        array $interactionScores,
+        array $preferenceScores,
+        array $popularityScores,
+        array $capacityScores,
+        array $ratingScores,
+        array $userCorrelationScores
+    ): array {
+        $this->logCalculation("Starting score combination process", [
+            'total_events' => count(array_unique(array_merge(
+                array_keys($interactionScores),
+                array_keys($preferenceScores),
+                array_keys($popularityScores),
+                array_keys($capacityScores),
+                array_keys($ratingScores),
+                array_keys($userCorrelationScores)
+            )))
+        ]);
 
         $combinedScores = [];
-
         $allEventIds = array_unique(array_merge(
             array_keys($interactionScores),
             array_keys($preferenceScores),
@@ -417,19 +481,118 @@ class RecommendationEngine
             $ratingScore = $ratingScores[$eventId] ?? 0;
             $userCorrelationScore = $userCorrelationScores[$eventId] ?? 0;
 
-            $combinedScores[$eventId] =
-            ($interactionScore * 0.35) +
-                ($preferenceScore * 0.20) +
-                ($popularityScore * self::POPULARITY_WEIGHT) +
-                ($capacityScore * self::CAPACITY_WEIGHT) +
-                ($ratingScore * self::RATING_WEIGHT) +
-                ($userCorrelationScore * self::USER_CORRELATION_WEIGHT);
+            // Log individual scores before combination
+            $this->logCalculation("Raw scores for Event ID: $eventId", [
+                'interaction_score' => [
+                    'value' => $interactionScore,
+                    'weight' => 0.35
+                ],
+                'preference_score' => [
+                    'value' => $preferenceScore,
+                    'weight' => 0.20
+                ],
+                'popularity_score' => [
+                    'value' => $popularityScore,
+                    'weight' => self::POPULARITY_WEIGHT
+                ],
+                'capacity_score' => [
+                    'value' => $capacityScore,
+                    'weight' => self::CAPACITY_WEIGHT
+                ],
+                'rating_score' => [
+                    'value' => $ratingScore,
+                    'weight' => self::RATING_WEIGHT
+                ],
+                'user_correlation_score' => [
+                    'value' => $userCorrelationScore,
+                    'weight' => self::USER_CORRELATION_WEIGHT
+                ]
+            ]);
 
-            $this->logCalculation("Event ID: $eventId, Combined Score: {$combinedScores[$eventId]}");
+            // Calculate weighted components for logging
+            $weightedComponents = [
+                'interaction' => $interactionScore * 0.35,
+                'preference' => $preferenceScore * 0.20,
+                'popularity' => $popularityScore * self::POPULARITY_WEIGHT,
+                'capacity' => $capacityScore * self::CAPACITY_WEIGHT,
+                'rating' => $ratingScore * self::RATING_WEIGHT,
+                'user_correlation' => $userCorrelationScore * self::USER_CORRELATION_WEIGHT
+            ];
+
+            // Calculate final combined score
+            $combinedScores[$eventId] =
+            $weightedComponents['interaction'] +
+                $weightedComponents['preference'] +
+                $weightedComponents['popularity'] +
+                $weightedComponents['capacity'] +
+                $weightedComponents['rating'] +
+                $weightedComponents['user_correlation'];
+
+            // Log weighted components and final score
+            $this->logCalculation("Score calculation details for Event ID: $eventId", [
+                'event_id' => $eventId,
+                'weighted_components' => $weightedComponents,
+                'final_score' => $combinedScores[$eventId]
+            ]);
         }
+
+        // Log summary statistics
+        $this->logCalculation("Score combination complete", [
+            'total_events_processed' => count($allEventIds),
+            'score_range' => [
+                'min' => min($combinedScores),
+                'max' => max($combinedScores),
+                'avg' => array_sum($combinedScores) / count($combinedScores)
+            ],
+            'top_scores' => array_slice(
+                array_combine(
+                    array_keys($combinedScores),
+                    array_values($combinedScores)
+                ),
+                0,
+                5,
+                true
+            )
+        ]);
 
         return $combinedScores;
     }
+    /* private function combineScores(array $interactionScores, array $preferenceScores, array $popularityScores, array $capacityScores, array $ratingScores, array $userCorrelationScores): array */
+    /* { */
+    /*     $this->logCalculation("Combining scores for final recommendations"); */
+    /*  */
+    /*     $combinedScores = []; */
+    /*  */
+    /*     $allEventIds = array_unique(array_merge( */
+    /*         array_keys($interactionScores), */
+    /*         array_keys($preferenceScores), */
+    /*         array_keys($popularityScores), */
+    /*         array_keys($capacityScores), */
+    /*         array_keys($ratingScores), */
+    /*         array_keys($userCorrelationScores) */
+    /*     )); */
+    /*  */
+    /*     foreach ($allEventIds as $eventId) { */
+    /*         $interactionScore = $interactionScores[$eventId] ?? 0; */
+    /*         $preferenceScore = $preferenceScores[$eventId] ?? 0; */
+    /*         $popularityScore = $popularityScores[$eventId] ?? 0; */
+    /*         $capacityScore = $capacityScores[$eventId] ?? 0; */
+    /*         $ratingScore = $ratingScores[$eventId] ?? 0; */
+    /*         $userCorrelationScore = $userCorrelationScores[$eventId] ?? 0; */
+    /*  */
+    /*         $combinedScores[$eventId] = */
+    /*         ($interactionScore * 0.35) + */
+    /*             ($preferenceScore * 0.20) + */
+    /*             ($popularityScore * self::POPULARITY_WEIGHT) + */
+    /*             ($capacityScore * self::CAPACITY_WEIGHT) + */
+    /*             ($ratingScore * self::RATING_WEIGHT) + */
+    /*             ($userCorrelationScore * self::USER_CORRELATION_WEIGHT); */
+    /*  */
+    /*         $this->logCalculation("Event ID: $eventId, Combined Score: {$combinedScores[$eventId]}"); */
+    /*     } */
+    /*  */
+    /*     return $combinedScores; */
+    /* } */
 
     private function logCalculation(string $message): void
     {

@@ -20,6 +20,7 @@ class EventResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'description' => $this->description,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'location' => $this->location,
@@ -43,6 +44,9 @@ class EventResource extends JsonResource
             'total_registered' => $this->getTotalInteractions('view'),
 
             'logged_user_rating' => $this->getUserRating(),
+
+            'is_over' => $this->is_over,
+            'is_running' => $this->is_running,
 
             "category_id" => $this->category_id,
             "category" => $this->category,

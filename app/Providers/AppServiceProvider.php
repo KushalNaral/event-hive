@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
             if (!Schema::hasTable('oauth_clients')) {
                 Artisan::call('passport:install');
             }
+        }
+
+        if (!defined('ALLOW_ROLES')) {
+            define('ALLOW_ROLES', config('app.allow_roles'));
         }
     }
 }

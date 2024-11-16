@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [StatisticsController::class, 'index']);
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+//Route::get('/dashboard/data', [DashboardController::class, 'getData'])->name('dashboard.data');

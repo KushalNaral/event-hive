@@ -20,3 +20,4 @@ yarn-error.log
 composer.lock
 .phpunit.*
 /phpunit.xml
+*.lock

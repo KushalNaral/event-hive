@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -80,6 +81,16 @@ class Event extends Model
 
         $rating = Rating::where('event_id', $event_id)->where('created_by', $user_id)->latest()->first()?->rating ;
         return $rating ?? 'not-rated';
+    }
+
+    public function getIsOverAttribute()
+    {
+        return Carbon::now()->greaterThan($this->end_date);
+    }
+
+    public function getIsRunningAttribute()
+    {
+        return Carbon::now()->between($this->start_date, $this->end_date);
     }
 }
 

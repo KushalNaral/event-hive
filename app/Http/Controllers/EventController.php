@@ -34,6 +34,13 @@ class EventController extends Controller
     /*     } */
     /* } */
 
+    protected $recommendationEngine;
+
+    public function __construct(RecommendationEngine $recommendationEngine)
+    {
+        $this->recommendationEngine = $recommendationEngine;
+    }
+
     public function getAllEvents(Request $request)
     {
         try {
@@ -46,7 +53,7 @@ class EventController extends Controller
             $isAdmin = auth()->user()->hasRole('admin');
 
             // Apply published filter for non-admin users
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -84,7 +91,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -233,7 +240,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -273,6 +280,9 @@ class EventController extends Controller
                 "category" => $event->category,
                 "created_by" => [ "id" => $event->createdBy?->id , "name" => $event->createdBy?->name ],
                 "created_at" => $event->created_at,
+
+                "is_running" => $event->is_running,
+                "is_over" => $event->is_over,
             ];
 
             return successResponse($mapped_event, 'Event(s) fetched successfully');
@@ -492,30 +502,52 @@ class EventController extends Controller
     public function getRecommendations(Request $request)
     {
         $user = Auth::user();
-        $recommendationEngine = new RecommendationEngine();
-        $recommendedEventIds = $recommendationEngine->getRecommendations($user, 100);
 
-        $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id)->where('is_published', 1)->whereIn('id', array_keys($recommendedEventIds))
+        $recommendedEventIds = $this->recommendationEngine->getRecommendations($user, 100);
+        $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id);
+
+        $isAdmin = auth()->user()->hasRole('admin');
+        if (!$isAdmin && ALLOW_ROLES) {
+            $recommendedEvents->where('is_published', 1);
+        }
+
+        $recommendedEvents = $recommendedEvents->whereIn('id', array_keys($recommendedEventIds))
             ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")")
             ->get();
-        //->pluck('id');
 
-        return successResponse( EventResource::collection(new EventCollection($recommendedEvents)), "Recommended events", 200);
+        /* $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id) */
+        /*     ->where('is_published', 1) */
+        /*     ->whereIn('id', array_keys($recommendedEventIds)) */
+        /*     ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")") */
+        /*     ->get(); */
 
+        return successResponse(
+            EventResource::collection(new EventCollection($recommendedEvents)),
+            "Recommended events",
+            200
+        );
     }
+
+    /* public function getRecommendations(Request $request) */
+    /* { */
+    /*     $user = Auth::user(); */
+    /*     $recommendationEngine = new RecommendationEngine(); */
+    /*     $recommendedEventIds = $recommendationEngine->getRecommendations($user, 100); */
+    /*  */
+    /*     $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id)->where('is_published', 1)->whereIn('id', array_keys($recommendedEventIds)) */
+    /*         ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")") */
+    /*         ->get(); */
+    /*     //->pluck('id'); */
+    /*  */
+    /*     return successResponse( EventResource::collection(new EventCollection($recommendedEvents)), "Recommended events", 200); */
+    /*  */
+    /* } */
 
     public function getUserEvents(Request $request)
     {
         try {
             $query = Event::query();
             $events = $query->where('created_by', auth()->user()->id);
-
-            $isAdmin = auth()->user()->hasRole('admin');
-
-            // Apply published filter for non-admin users
-            if (!$isAdmin) {
-                $query->where('is_published', 1);
-            }
 
             $filter = new EventFilter($request);
             $filteredEvents = $filter->apply($query);
@@ -544,7 +576,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -581,7 +613,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -616,7 +648,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 
@@ -650,7 +682,7 @@ class EventController extends Controller
 
             $isAdmin = auth()->user()->hasRole('admin');
 
-            if (!$isAdmin) {
+            if (!$isAdmin && ALLOW_ROLES) {
                 $query->where('is_published', 1);
             }
 

@@ -26,9 +26,9 @@ class RoleSeeder extends Seeder
             $user = User::find($tempAdminUserId);
 
             if ($user) {
-                $user->role()->detach();  // Detach any current role
+                $user->roles()->detach();  // Detach any current role
 
-                $user->role()->attach($adminRole->id);
+                $user->roles()->attach($adminRole->id);
                 echo "Admin role attached to user with ID: {$tempAdminUserId}\n";
             } else {
                 echo "User with ID: {$tempAdminUserId} not found.\n";
