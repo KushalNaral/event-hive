@@ -80,7 +80,7 @@ class Event extends Model
         $user_id = auth()->user()->id;
 
         $rating = Rating::where('event_id', $event_id)->where('created_by', $user_id)->latest()->first()?->rating ;
-        return $rating ?? 'not-rated';
+        return $rating ?? 0;
     }
 
     public function getIsOverAttribute()
