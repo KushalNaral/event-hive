@@ -512,9 +512,15 @@ class EventController extends Controller
             $recommendedEvents->where('is_published', 1);
         }
 
-        $recommendedEvents = $recommendedEvents->whereIn('id', array_keys($recommendedEventIds))
-            ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")")
+        $recommendedEventIdsKeys = array_keys($recommendedEventIds);
+
+        $recommendedEvents = Event::whereIn('id', $recommendedEventIdsKeys)
+            ->orderByRaw("FIELD(id, " . implode(',', $recommendedEventIdsKeys) . ")")
             ->get();
+
+        /* $recommendedEvents = $recommendedEvents->whereIn('id', array_keys($recommendedEventIds)) */
+        /*     ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")") */
+        /*     ->get(); */
 
         /* $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id) */
         /*     ->where('is_published', 1) */

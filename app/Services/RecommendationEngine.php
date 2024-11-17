@@ -55,17 +55,22 @@ class RecommendationEngine
             $userCorrelationScores
         );
 
+
         arsort($combinedScores);
         $topRecommendations = array_slice($combinedScores, 0, $limit, true);
+        $interactedEventsIndexex = UserInteraction::where('user_id', $user->id )->get()->pluck('id')->toArray();
+
+        // Filter out the interacted events from $topRecommendations
+        $topRecommendations = array_filter($topRecommendations, function($key) use ($interactedEventsIndexex) {
+            return !in_array($key, $interactedEventsIndexex);
+        }, ARRAY_FILTER_USE_KEY);
 
         $recommendations = $this->getSimilarEvents($topRecommendations, $combinedScores);
 
-        //dd($topRecommendations, $recommendations , auth()->user()->id);
+        //dd($recommendations);
 
         $this->logCalculation("Finished recommendation calculation for User ID: {$user->id}");
-
         $this->logger->logRecommendationComplete($this->currentLogId, $recommendations);
-
 
         return $recommendations;
     }
