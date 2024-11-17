@@ -33,7 +33,7 @@ class Event extends Model
         return $this->hasOne(User::class, 'id');
     }
 
-    public function ratings(){
+    public function rating(){
         return $this->hasMany(Rating::class);
     }
 
@@ -95,7 +95,7 @@ class Event extends Model
 
     public function getTotalRating()
     {
-        $totalRatings = $this->ratings->pluck('rating')->toArray();
+        $totalRatings = $this->rating->pluck('rating')->toArray();
 
         if (count($totalRatings) === 0) {
             return 0;

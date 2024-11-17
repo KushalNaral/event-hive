@@ -440,7 +440,7 @@ class EventController extends Controller
 
         foreach ($pastEvents as $event) {
             if ($event->rating) {
-                $totalRating += $event->rating->rating;
+                $totalRating += $event->getTotalRating();
                 $ratingCount++;
             }
         }

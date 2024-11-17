@@ -435,7 +435,7 @@ class RecommendationEngine
             ->groupBy('event_id')
             ->get();
 
-        $maxRating = EventRating::max('rating') ?: 5; // Assuming a 5-star rating system if no ratings yet
+        $maxRating = EventRating::max('rating') ?: 1;
 
         foreach ($eventRatings as $rating) {
             $scores[$rating->event_id] = $rating->avg_rating / $maxRating;
