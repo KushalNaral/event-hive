@@ -274,7 +274,8 @@ class EventController extends Controller
                 'total_registered' => $event->getTotalInteractions('view'),
                 'published' => $event->is_published ? true : false,
 
-                'logged_user_rating' => $event->getUserRating(),
+                'total_rating' => $event->getTotalRating() ?? 0,
+                'my_rating' => $event->getUserRating(),
 
                 "category_id" => $event->category_id,
                 "category" => $event->category,

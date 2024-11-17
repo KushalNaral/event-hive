@@ -43,7 +43,8 @@ class EventResource extends JsonResource
             'total_attending' => $this->getTotalInteractions('view'),
             'total_registered' => $this->getTotalInteractions('view'),
 
-            'logged_user_rating' => $this->getUserRating(),
+            'total_rating' => $this->getTotalRating() ?? 0,
+            'my_rating' => $this->getUserRating(),
 
             'is_over' => $this->is_over,
             'is_running' => $this->is_running,

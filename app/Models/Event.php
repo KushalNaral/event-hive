@@ -33,8 +33,8 @@ class Event extends Model
         return $this->hasOne(User::class, 'id');
     }
 
-    public function rating(){
-        return $this->hasOne(Rating::class);
+    public function ratings(){
+        return $this->hasMany(Rating::class);
     }
 
     public function image(){
@@ -91,6 +91,18 @@ class Event extends Model
     public function getIsRunningAttribute()
     {
         return Carbon::now()->between($this->start_date, $this->end_date);
+    }
+
+    public function getTotalRating()
+    {
+        $totalRatings = $this->ratings->pluck('rating')->toArray();
+
+        if (count($totalRatings) === 0) {
+            return 0;
+        }
+
+        $averageRating = array_sum($totalRatings) / count($totalRatings);
+        return (float) $averageRating;
     }
 }
 
