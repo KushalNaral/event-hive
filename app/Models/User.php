@@ -52,7 +52,8 @@ class User extends Authenticatable
     //updating preferences here
     public function updatePreferences(array $preferences)
     {
-        $this->preferences = array_merge($this->preferences ?? [], $preferences);
+        $userPreferences = json_decode($this->preferences, true) ?? [];
+        $this->preferences = array_merge($userPreferences ?? [], $preferences);
         $this->save();
     }
 
