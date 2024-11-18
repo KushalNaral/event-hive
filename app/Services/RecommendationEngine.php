@@ -58,7 +58,7 @@ class RecommendationEngine
 
         arsort($combinedScores);
         $topRecommendations = array_slice($combinedScores, 0, $limit, true);
-        $interactedEventsIndexex = UserInteraction::where('user_id', $user->id )->get()->pluck('id')->toArray();
+        $interactedEventsIndexex = UserInteraction::where('user_id', $user->id )->get()->pluck('event_id')->toArray();
 
         // Filter out the interacted events from $topRecommendations
         $topRecommendations = array_filter($topRecommendations, function($key) use ($interactedEventsIndexex) {
