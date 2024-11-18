@@ -320,7 +320,10 @@ class RecommendationEngine
     private function compareDuration(array $preferredDurations, ?int $eventDuration): float
     {
         if ($eventDuration === null) return 0.5;
-        $closestDuration = $this->getClosestValue($eventDuration, $preferredDurations);
+        if (empty($preferredDurations)) {
+            $preferredDurations = [1];
+        }
+        $closestDuration = $this->getClosestValue($eventDuration, $preferredDurations ?? 1);
         $maxDifference = max($preferredDurations) - min($preferredDurations);
         $actualDifference = abs($eventDuration - $closestDuration);
         return 1 - ($actualDifference / max($maxDifference, 1));
@@ -328,6 +331,10 @@ class RecommendationEngine
 
     private function getClosestValue(int $target, array $array)
     {
+        if (empty($array)) {
+            $array = [1];
+        }
+
         return $array[array_reduce(array_keys($array), function ($carry, $key) use ($array, $target) {
             return (abs($target - $array[$key]) < abs($target - $array[$carry])) ? $key : $carry;
         }, 0)];
