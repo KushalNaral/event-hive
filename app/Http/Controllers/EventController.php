@@ -11,6 +11,7 @@ use App\Models\Event;
 use App\Models\EventBookmarks;
 use App\Models\EventCategory;
 use App\Models\EventLikes;
+use App\Models\Rating;
 use App\Services\RecommendationEngine;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -505,18 +506,28 @@ class EventController extends Controller
         $user = Auth::user();
 
         $recommendedEventIds = $this->recommendationEngine->getRecommendations($user, 100);
-        $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id);
+        $recommendedEventIdsKeys = array_keys($recommendedEventIds);
+
+        $likedEventIds = EventLikes::where('user_id', $user->id)->get()->pluck('event_id')->toArray();
+        $bookmarkedEventIds = EventBookmarks::where('user_id', $user->id)->get()->pluck('event_id')->toArray();
+        $ratedEvents = Rating::where('created_by', $user->id)->get()->pluck('event_id')->toArray();
+
+        $recommendedEvents = Event::where('created_by', '!=', auth()->user()->id)->whereIn('id', $recommendedEventIdsKeys);
 
         $isAdmin = auth()->user()->hasRole('admin');
         if (!$isAdmin && ALLOW_ROLES) {
             $recommendedEvents->where('is_published', 1);
         }
 
-        $recommendedEventIdsKeys = array_keys($recommendedEventIds);
 
         $recommendedEvents = Event::whereIn('id', $recommendedEventIdsKeys)
+            ->whereNotIn('id', $likedEventIds)
+            ->whereNotIn('id', $bookmarkedEventIds)
+            ->whereNotIn('id', $ratedEvents)
             ->orderByRaw("FIELD(id, " . implode(',', $recommendedEventIdsKeys) . ")")
             ->get();
+
+        //dd($recommendedEvents->pluck('id'), $likedEventIds, $bookmarkedEventIds, $ratedEvents);
 
         /* $recommendedEvents = $recommendedEvents->whereIn('id', array_keys($recommendedEventIds)) */
         /*     ->orderByRaw("FIELD(id, " . implode(',', array_keys($recommendedEventIds)) . ")") */

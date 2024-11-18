@@ -67,7 +67,7 @@ class RecommendationEngine
 
         $recommendations = $this->getSimilarEvents($topRecommendations, $combinedScores);
 
-        //dd($recommendations);
+        //dd($recommendations , $interactedEventsIndexex, auth()->user()->id);
 
         $this->logCalculation("Finished recommendation calculation for User ID: {$user->id}");
         $this->logger->logRecommendationComplete($this->currentLogId, $recommendations);

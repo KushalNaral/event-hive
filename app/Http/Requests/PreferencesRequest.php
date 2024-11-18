@@ -23,7 +23,7 @@ class PreferencesRequest extends FormRequest
             'preferred_seasons' => 'nullable|array',
             'preferred_seasons.*' => 'string|in:winter,summer,fall,spring',
             'preferred_event_sizes' => 'nullable|array',
-            'preferred_event_sizes.*' => 'string|in:intimate,medium,large',
+            'preferred_event_sizes.*' => 'string|in:small,intimate,medium,large',
             'preferred_days' => 'nullable|array',
             'preferred_days.*' => 'string|in:weekday,weekend',
             'preferred_themes' => 'nullable|array',
