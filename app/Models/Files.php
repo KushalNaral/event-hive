@@ -15,4 +15,14 @@ class Files extends Model
         'model_id', 'model_type', 'location', 'type', 'url', 'name', 'extension', 'size', 'download',
         'created_by', 'updated_by', 'deleted_by'
     ];
+
+    public function image()
+    {
+        return $this->belongsTo(Files::class);
+    }
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
 }

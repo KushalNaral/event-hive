@@ -32,5 +32,9 @@ class AppServiceProvider extends ServiceProvider
         if (!defined('ALLOW_ROLES')) {
             define('ALLOW_ROLES', config('app.allow_roles'));
         }
+
+        if(!defined('EVENT_NOTIFICATION_SPAN')){
+            define('EVENT_NOTIFICATION_SPAN', config('app.event_confirm_span'));
+        }
     }
 }

@@ -50,7 +50,23 @@ trait ImageUploader
         return $fileModel;
     }
 
-    public function deleteFile(File $file): bool
+    public function updateEventImage(Request $request, Event $event)
+    {
+        if ($event->image) {
+            if ($request->hasFile('image')) {
+                $this->updateFile($event->image, $request->file('image'), 'uploads');
+            }
+        } else {
+            if ($request->hasFile('image')) {
+                $newFile = $this->storeFile($request->file('image'), 'uploads');
+                $event->image()->associate($newFile);
+                $event->save();
+            }
+        }
+    }
+
+
+    public function deleteFile(Files $file): bool
     {
         if (Storage::disk('public')->exists($file->location)) {
             Storage::disk('public')->delete($file->location);

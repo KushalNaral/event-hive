@@ -9,6 +9,10 @@ use App\Models\EventBookmarks;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\EventRegistrationConfirmation;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Event;
+
 use Exception;
 
 class UserInteractionsController extends Controller
@@ -30,6 +34,9 @@ class UserInteractionsController extends Controller
             DB::beginTransaction();
 
             //$this->deleteInteraction($userId, $eventId, $interactionType);
+            if($interactionType == 'attend') {
+                $this->registerForEvent($eventId);
+            }
 
             if ($interactionType === 'like' || $interactionType === 'un-like' || $interactionType === 'dis-like') {
 
@@ -186,6 +193,39 @@ class UserInteractionsController extends Controller
                     ->where('interaction_type', $interaction)
                     ->delete();
             }
+        }
+    }
+
+
+    public function registerForEvent($eventId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $event = Event::findOrFail($eventId);
+            $user = Auth::user();
+
+            $exists = UserInteractions::where('event_id', $eventId)->where('user_id', $user->id)->exists();
+            if ($exists) {
+                return errorResponse('User is already registered for this event', 400);
+            }
+
+            $interaction = UserInteractions::create([
+                'user_id' => $user->id,
+                'event_id' => $eventId,
+                'interaction_type' => 'attend'
+            ]);
+
+            $user->notify(new EventRegistrationConfirmation($event));
+
+            DB::commit();
+
+            return successResponse(null, 'Successfully registered for event');
+        } catch (\Exception $e) {
+            // Rollback any changes if an error occurs
+            DB::rollBack();
+
+            return errorResponse('Failed to register for event', 500, [$e->getMessage()]);
         }
     }
 }

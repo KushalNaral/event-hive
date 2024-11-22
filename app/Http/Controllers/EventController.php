@@ -12,6 +12,7 @@ use App\Models\EventBookmarks;
 use App\Models\EventCategory;
 use App\Models\EventLikes;
 use App\Models\Rating;
+use App\Models\UserInteractions;
 use App\Services\RecommendationEngine;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -195,17 +196,17 @@ class EventController extends Controller
                 return errorResponse('An error occured, please try again later', 400, []);
             }
 
-            if($request->hasFile('image')){
-               $this->updateFile($event->image, $request->image, 'uploads');
+            if ($request->hasFile('image')) {
+                $this->updateFile($event->image, $request->file('image'), 'uploads');
             }
 
             DB::commit();
-            $this->generateAndSetEventAttributes($event);
+                $this->generateAndSetEventAttributes($event);
             return successResponse($event, "Event Updated Successfully", 200);
-        } catch (QueryException $q) {
+            } catch (QueryException $q) {
             DB::rollBack();
             return errorResponse('Database error occurred while updating event.', 500, [$q->getMessage()]);
-        } catch (Exception $e) {
+            } catch (Exception $e) {
             DB::rollBack();
             return errorResponse('An unexpected error occurred.', 500, [$e->getMessage()]);
         }
@@ -724,4 +725,5 @@ class EventController extends Controller
             );
         }
     }
+
 }

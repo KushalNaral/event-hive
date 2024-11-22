@@ -126,6 +126,7 @@ return [
     'cipher' => 'AES-256-CBC',
 
     'allow_roles' => env('ADMIN_ROLES', false),
+    'event_confirm_span' => env('EVENT_UPCOMING_NOTIFICATION_DATE', 7),
 
     /*
     |--------------------------------------------------------------------------

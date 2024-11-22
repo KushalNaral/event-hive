@@ -85,4 +85,8 @@ class User extends Authenticatable
     {
         $this->roles()->detach($role);
     }
+
+    public function interactions(){
+        $this->hasMany(UserInteractions::class);
+    }
 }

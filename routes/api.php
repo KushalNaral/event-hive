@@ -60,8 +60,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('events')->middleware('auth:api')->group(function () {
 
         //for recommendations
+        Route::post('/{event}/register', [EventController::class, 'registerForEvent']);
         Route::get('/recommendations', [EventController::class, 'getRecommendations']);
         Route::get('/attending', [EventController::class, 'getAttendingEvents']);
+        /* Route::get('/attended', [EventController::class, 'getAttendedEvents']); */
         Route::get('/attended', [EventController::class, 'getAttendedEvents']);
         Route::get('/bookmarked', [EventController::class, 'getBookmarkedEvents']);
         Route::get('/liked', [EventController::class, 'getLikedEvents']);
